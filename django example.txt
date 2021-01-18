@@ -1,0 +1,70 @@
+0. project 폴더 만들기
+1. 가상환경 생성
+py -m venv <폴더명>
+exit()
+code . <- 가상환경으로 들어가게해줌
+
+2. 가상환경 내에 django패키지 설치
+cmd :
+scripts에 activate.bat 를 실행하여 가상환경을 activate해준다.
+그리고나서 pip install django입력.
+나올때 deactivate입력
+vs code:
+ctrl + shift + p 눌러서 select interpreter실행
+.\env\scripts\python.exe 선택
+default shell -> command prompt로 바꿔줌
+terminal 새로실행후에 python -m pip install django
+
+3. 프로젝트 생성하기
+cmd
+activate 시킨 상태에서,
+proj 폴더까지 내려온후에,
+django-admin startproject <프로젝트명>을 입력해준다.
+프로젝트 폴더에 들어가면,
+settings.py : django apllication 글로벌 설정값
+urls.py : http web 요청에 대한 컨트롤
+wsgi.py : 웹서비스 설정
+
+vscode
+django-admin startproject <프로젝트명>입력
+cd 프로젝트명
+python manage.py runserver  (서버실행)
+
+4. 웹브라우저 실행해서 접속(확인차)
+http://localhost:8000
+
+Django app 만들기
+1. VSCode Terminal에서 앱 생성
+python manage.py startapp <앱명>
+
+2. hello/view.py 작성
+from django.http import HttpResponse
+def home(request):
+    return HttpResponse("Hello, Django!")
+
+3. hello/urls.py
+from django.urls import path
+from hello import views
+urlpatterns = [
+    path("", views.home, name="home"),
+]
+
+4. web_proj/urls.py수정
+from django.contrib import admin
+from django.urls import include, path
+
+urlpatterns = [
+    path("", include("hello.urls")),
+]
+
+5. 웹브라우저에서 확인
+
+프로젝트의 하위폴더 분석
+__init__.py는 빈 파일입니다. 이 파일은 파이썬에게 이 디렉토리를 하나의 파이썬 패키지로 다루도록 지시합니다.
+settings.py는 웹사이트의 모든 설정을 포함하고 있습니다. 이 파일에는 우리가 만드는 모든 어플리케이션, 정적 파일의 위치, 데이터베이스 세부 설정 등을 등록합니다. 
+urls.py는 사이트의 URL과 뷰의 연결을 지정해줍니다. 여기에는 모든 URL 매핑 코드가 포함될 수 있지만, 특정한 어플리케이션에 매핑의 일부를 할당해주는 것이 일반적입니다.
+wsgi.py는 당신의 장고 어플리케이션이 웹서버와 연결 및 소통하는 것을 돕습니다. 당신은 이것을 표준 형식(boilerplate)으로 다뤄도 무방합니다.
+manage.py는 어플리케이션을 생성하고, 데이터베이스와 작업하고, 그리고 개발 웹 서버를 시작하기 위해 사용됩니다. 
+
+migrations 폴더 — 모델을 수정할 때 마다 자동으로 데이터베이스를 업데이트하는 것을 가능하게 해 줄 마이그레이션 파일들을 저장할 폴더 
+__init__.py — 장고/파이썬이 폴더를 파이썬 패키지로 인식하게 할 빈 파일입니다. 또한 프로젝트의 다른 부분에서 객체(object)를 사용할 수 있게 합니다.
