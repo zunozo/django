@@ -1,0 +1,163 @@
+User authentication and permissions
+(유저 인증 , 허가)
+
+당신의 사이트에 그들의 계정으로 로그인을 어떻게 허락할 것인지, 그리고 그들의 로그인 여부와 그들에게 허가한 퍼미션에 따라 사이트에서 무엇을 할 수 있게 하거나, 볼 수 있게 할 것인지에 대해서 알려줄 것임. 또한 website를 확장시켜서, 로그인, 로그아웃 페이지를 덧붙이고, 사용자와 staff들이 그들이 빌려간 책들을 볼 수 있는 특펼한 페이지들도 추가할 것임.
+
+Django는 인증과 권위 부여('허가') 시스템을 제공함. 사용자의 credentials을 검증하고 사용자들이 행동들의 허가 여부를 정의함. 이 프레임워크는 Users와 Groups(한번에 한명 이상의 유저에게 허가를 적용하는 일반적인 방법)을 위한 빌트인 모델을 포함하는데, permissions/flags는 사용자들이 일이나, Forms, 로그인 한 유저들의 뷰, 그리고 컨텐츠를 제한하는 뷰 툴을 조정할지 아닌지, 디자인함.
+
+Django의 인증시스템은 매우 일반적인 것을 목표로하기 때문에, 다른 웹사이트 인증시스템에서 제공하는 특정한 기능들을 제공하지 않음. 이런 문제에 대한 해결방법은 서드파티 솔루션을 이용하는 것임. 예를 들면, 로그인 시도제한과 제3자에 대한 인증과같은 기능들은 제공하지 않음.
+
+유저인증을 어떻게 활성화하는지 보여주고, 로그인, 로그아웃 페이지를 만들며 당신의 모델과 페이지에 대한 권한 및 그 조정에 대해서 살펴볼 것임. 우리는 인증과 허가(권한)을 사용해서 사용자나 사서가 빌린 책들을 표시할 것임.
+
+이 인증시스템은 매우 유연하므로 원한다면 단지 제공된 로그인 API를 호출하는 것만으로 scratch에서 온 당신의 URLs, forms, views와 templates를 작성할 수 있음. 그렇지만, 이 단계에서는 Django가 "보유한"인증 views와 forms를 이용하여 우리의 로그인과 로그아웃페이지를 만들 것임. 여전히 어떤 템플릿들을 만들어야 함.
+
+설정을 위해 필요한 것들은 모두 django-admin startproejct 명령을 이용하여 앱을 생성했을 때 끝났음. 사용자들과 모델 퍼미션을 위한 데이터베이스 테이블들은 우리가 처음으로 python manage.py migrate을 실행했을 때 만들어졌음.
+
+아래에서 보여주는 것과 같이, 설정은 settings.py파일에서 INSTALLED_APPS와 MIDDLEWARE 부분을 셋업하는 것임.
+
+2. user와 groups 만들기
+이미 슈퍼유저로서 python manage.py createsuperuser 라는 명령으로 만들었다. 우리의 슈퍼유저는 이미 인증이 되어있고 모든 권한을 가지고 있으므로, 일반적인 사이트 유저를 대표하는 테스트 유저를 만들 것임. 우리의 locallibrary groups와 website logins 을 위해서 우리는 admin 사이트를 이요할 것인데, 이것이 가장 빠른 방법중 하나임.
+
+아래에서 보여주는 것처럼 프로그램적으로 사용자를 추가할 수 있음. 만약에 사용자가 로그인하는 사이트를 개발한다면, 이것을 해야함.(사용자들이 admin site를 접근하게 해서는 안됨.)
+
+첫번쨰 그룹과 그 그룹의 사용자를 만들 것임. 아직까지 우리의 도서관 멤버로서 아무런 퍼미션도 부여하지는 않음. 그러나 나중에 필요하다면, 개인들에게 각각하는 것보다는 그룹에 한번에 하는 것이 훨씬 쉬운일 임.
+
+admin으로 로그인해서 Group을 만들고 User를 만든다.
+//user를 만드는 과정에서 오류가 났는데, 비밀번호에 대해 내가 1q2w3e4r을 눌렀는데 너무 common하다고 다시하라고한다.. 완전신기
+
+내가 만든 그룹에 넣고, 확인하면 no staff라고 뜬다. 로그인 페이지만 만든다면, 실제로 이 유저로 로그인할 수 있고 test할 수 있는 환경이된다.
+
+3. authentication views 세팅하기
+Django는 authentication pages 에서 login, log out , and password 조정을 위한 거의 모든 것을 제공해 준다. 'out of the box'. 이것은 URL mapper, views와 forms들을 포함하지만 templates는 포함하지 않음.
+여기서 , 우리는 기본 시스템들에 locallibrary를 통합하고, template들을 만들 수 있는지 확인할것임. 그리고 이것들을 프로젝트 메인 URL들에 넣을 것임.
+
+이 경우에, catalog application에 URL과 템플릿을 포함해서 authentication page들을 넣는게 합리적임. 그러나 많은 application 들을 가지고 있다면, 공통적으로 로그인 해야하는 것을 분리하고 사이트 전체에서 로그인하는 것을 가능하게끔하는게 좋음. 이게 우리가 여기서 볼려고하는것임.
+
+Using the above mtehod, adds the following urls with names i n suqre brackets, which can be used to reverse the url mappings. you don't have to implement anythinig else.
+
+4. Template directory
+the URLs that we just added expect to find their associated templates in a directory/registration/ somewhere in the tmeplates search path.
+
+for this site, we'll put our html pages in the templates/registration/ directory. this directory should be in your project root directory, i.e the same directory as the catalog and locallibrary folders).
+
+to make these directories visible to the template loader (i.e. to put this directory in the template search path) open the project settings (/locallibrary/locallibrary/settings.py), and update the templates section's dirs line.
+
+5. login template
+the authentication templates provided in this article are a very basic/slightly modified version of the Django demonstration login templates. you may need to custmoise them for your own use!
+
+this template shares some simlilarities with the ones we've seen before - it extends our base template and overrides the content block. the rest of the code is standard form handling code, which we will discuss in a later tutorial. All you need to know for now is that this will display a form in which you can enter your username and password and that if you enter invalid values you will be prompted to enter correct values when the page refreshes.
+
+if you try to log in that will succed and you'll be redirected to another page (by default this will be /accounts/profile/ the problem here is that by default django expects that after login you will want to be taken to a profile page, which may or may not be the case. As you haven't defined this page yet, you'll get another error!
+
+now when you log in you should be redirected to the site homepage by default.
+
+6. Logout template
+if you navigate to the logout URL then you'll see some odd behaviour - your user will be logged out sure enough, but you'll be taken to the admin logout page. that's not what you want, if onyl because the login link on that page takes you to the admin login screen(and that is only available to users who have the is_staff permission)
+
+7. password rest templates
+the default password reset system uses email to send the user a rest link. you need to create forms to get the user's email address, send the email, allow them to enter a new password, and to note when the whole process i complete.
+
+the following templates can be used as a starting point.
+
+7-1. Password rest form
+this is the form used to get the user's email address(for sending the password reset email).
+Create /locallibrary/templates/registration/password_reset_form.html, and give it the following contents:
+
+7-2. Password reset done
+
+7-3. password reset email
+
+7-4. password reset confirm
+
+7-5. password reset complete
+
+8. Testing the new authentication pages
+Now that you've added the URL configuration and created all these templates, the autentication pages should now just work!
+
+You'll be able to test the password rest functionality from the link in the login page. be aware that django will only send reset emails to addresses (users) that are already stored in its database!
+
+The password reset system requires that your website supports email, which is beyond the scope of this article, so this part won't work yet. To allow testing, put the following line at then end of your settings.py file. this logs any emails sent to the console (so you cna copy the password reset link from the console).
+
+
+9. authenticated users 테스트하기
+this section looks at what we can do to selectively control content the users sees based on whether they are logged in or not.
+
+9-1. Testing in templates
+당신은 템플릿에서 {{user}} 라는 템플릿변수로 현재 로그인한 사용자에 대한 정보를 얻을 수 잇음. 이것은 우리의 스켈레톤을 만들때 프로젝트에서 세팅했을 때 템플릿 컨텍스트의 기본값으로 추가된 것임.
+
+보통 처음으로 {{user.is_authenticated}}라는 템플릿 변수를 통해서 당신은ㅇ 사용자가 특정 내용을 볼 수 있는 지여부에 대해서 테스트하게 될 것임. 이를 시험하기 위해서, 우리는 사이트바에 로그인와 로그아웃 링크를 업데이트 할 것임.
+
+As you can see, we use if-else-endif. tmeplate tags to conditionaly display text based on wheter {{user.is_authenticated}}is true. if the user is authenticated then we know that we have a valid user, so we call {{user.get_username}} to display their name.
+
+We create the login and logout link URLs using the url template tag and the names of the respective URL configurations. Note also how we have appended ?next={{request.path}} to the end of the URLs. What this does is add a URL parameter next containing the address(url) of the current page, to the end of the linked URL. After the user has successfully logged in/out, the views will use this "next" value to redirect the user back to the page where they first clikced the  login/logout link.
+
+Try it out! if you're on the home page and you click login/logout in the sidebar, then after the opertation completes you should end up back on the same page.
+
+10.Testing in views
+If you're using function-based views, the easiest way to restrict access to your functions is to apply the login_required decorator to your view function, as shown below. if the user is logged in then your view code will execute as normal. if the user is not logged in, this will redirect to the login URL defined in the project settings(settings.LOGIN_URL), passing the cureen tabsolute path as the next URL parameter. If the user succeeds in logging in then they will be returned back to this page, but this time authenticated.
+
+You can do the same sort of thing manually by testing on request.user.is_authenticated, but the decorator is much more convenient!
+
+Similarly, the easiest way to restrict access to logged-in users in your class-based views is to derive from LoginRequiredMixin. You need to declare this mixin first in the superclass list, befor ethe main view class.
+
+This ha sexactly the same redirect behaviour as the login_required decorator. You can also specify an alternative location to redirect the user to if they are not authenticated(login_url), and a URL parameter name instead of 'next'to insert the current absolute path(redirect_field_name).
+
+-.listing the current user's books
+
+So before we can create the book list we'll first extend the bookinstance model to support the concept of borrowing and use the django admin application to loan a number of books to our test user.
+
+Models
+First, we're going to have to make it possible for users to have a bookinstance on loan(we already have a status and a due_back date, but we don't yet have any association between this model and a User. We'll create one using a ForeignKey (one-to-many) field. We also need an easy mechanism to test whether a loaned book is overdue.
+
+so user is available to subsequent code that makes use of it.
+while we're here, let's add a property that we can call from our templates to tell if a particular book instance is overdue. While we could calculate this in the template itself, using a property as shown below will be much more efficient.
+
+We first verify wheter due_back is empty before making a comparison. An empty due_back field would case Django to throw an error instead of showing the page: empty values are not comparable. This is not something we would want our users to experience!
+Now we'll ned to make freh migrations on the project and then apply those migrations:
+
+11. Admin
+this will make the field visible in the admin section so that we can assign a user to a bookinstance when needed.
+
+11-1. Loan a few books
+Now that its possible to loan books to a specific users, go and loan out a number of BookInstance records. Set their borrowed field to your test user, make the satus "on loan' and set due dates both in the futer and the past.
+We won't spell the process out, as you already know how to use the admin site!
+
+11-2. On loan view
+now we'll add a view for getting the list of all books that have been loaned to the current user. we'll use the same generic class-based list view we're familiar with, but this tiem we'll also import and derive from loginRequiredmixin, so that only a logged in user can call this view.
+we will also choose to declare a template_name, rahter than using the default, because we may end up having a few different lists of bookinstance records, with different views and templates.
+
+in order to restrict our query to just the bookinstance objects for the current user, we reimplement get_queryset() as shown above. note that 'o'is  the stored code for "on loan" and we order by the due_back date so that the lodest items are displayed first.
+
+11-3. URL conf for on loan books
+
+11-4. Template for on-loan books
+this template is very similar to those we've created previously for the Book and Author objects. the only thing 'new' here is that we check the method we added in themodel (bookinst.is_overdue)and use it the change the colour of overdue items.
+
+When devlopment server is running, you should now be able to view the list for a logged in user in your browser at mybooks.
+try this out with your user logged in and logged out (in the second case, you shoudl be redirected to the login page).
+
+11-5. Add the list to the sidebar
+The very last step is to add a link for this new page into the sidebar. 
+
+12. 허가
+permissions 는 모델과 연관되어 허가를 가진 유저에 의한 model instance 작업들을 정의하게 된다. 기본적으로 Django 자동적으로 add,change, 그리고 delete permissions 을 모든 모델에 제고하는데, 유저가 관리자 사이트를 통해서 허가를 가지고 연관된 작업들을 하게 한다. 당신은 권한을 모델이나 특정 유저에게 부여하도록정의할 수 있음.
+
+12-1. Model
+Defining permissions is done on the model 'class meta'section, using the permissions field. you can specify as many permissions as you need in a tuple, each permission itself being defined in a nested tuple containing the permission name and permission display value. For example, we might define a permission to allow a user to mark that a book has been returned as shown.
+
+12-2. Templates
+the current users permissions are sotred in a template variable called {{perms}}. YOu can check whether the urrent user has a particular permission using the specific varialbe name within the associated Django "app" - e.g{{perms.catalog.can_mark_returned}} will be true if the user has this permission, and False otherwise. We typically test for the permission using the template {% if %}tag as shown.
+
+12-3. Views
+permission can be tested in function view using the permission_required decorator or in a class-based view using the permissionrequiredmixin. the patten and behaviour are the asame as for login authentication , though of course, you might reasonably have to add multiple permissions.
+
+Challenge.
+Earlier in this article, we showed you how to create a page for the current user listing the books that they have borrowed. the challenge now is to create s similar page that is only visible for librarians, that displays all boks that have been borrowed, and which includes the namfe of each borrower.
+
+you should be able to follow the same pattern as for the other view. the main difference is that you'll need to restrict the view to only librarinas. you could do this based on whether ther user is a staff member(function decorator: staff_member_required, tmeplate varialbe: user.is_staff)but we recommend that you instead use the can_mark_returned permission and permissionRequiredmxin, as decribed in the previous section.
+
+important: remember not to use superuser for mermissions based testing(permission check always return true for superusers, even if a permission ahs not yet been defined!).
+instead, create a librarian user, and add the required capability.
+
+// 마지막 도전과제. 미해결. permission이 어떻게 주고 확인하는지 다시 확인할것.
+is_authen...으로 되는데 왜 나는 permission을 확인하려고할때 알맞는 함수가 없을까?
