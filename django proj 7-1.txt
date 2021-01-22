@@ -1,0 +1,17 @@
+이전 challenge가 잘 끝나지 않았는데, 
+관리자?인지 아닌지 먼저 확인하고
+is_staff- > 관리자라면, permission을 가지는지 확인한다.
+여기서 permission을 가지는지 여러가지 방법이 존재할 수 있는데,
+1. view decorator
+from django.contrib.auth.decorators import permission_required
+
+@permission_required('catalog.can_mark_returned')
+def my_view(request):
+
+
+
+2. permission-required mixin for class-based views
+from django.contrib.auth.mixins import PermissionRequiredMixin
+
+clas Myview(PermissionRequiredMixin, view):
+permission_required = 'catalog.can_mark_returned'
