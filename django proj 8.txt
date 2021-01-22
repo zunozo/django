@@ -1,0 +1,115 @@
+Working with forms
+
+we'll show you how to wrok with HTML Forms in Django. and, in particular, the easiest way to write forms to create, update, and delete model instances. As part of this demonstration, we'll extend the Locallibrary website so that librarians can renew books, and create, update, and delte authors using our own forms (rather than using the admin application).
+
+An html From is a group of one or more fields/widgets on a web page, which can be used to collect in fromation from users for submission to a server. Forms are a flexible mechanism for collecting user input because there are suitable widgets for entering many differenet types of data, including text boxes, check boxes, radio buttons, date pickers and so on. Forms are also a relatvely secure way of sharing data with the server, as they allow us to send data inPOST requests with cross-site request forgery protection.
+
+While we haven't created any forms in this tutorial so far, we've already encountered them in the Django Admin site - for ex, the screenshot below shows a from for editing one of our book models, comprised of a number of selection lists and text editors.
+
+Working with forms can be complicated! Developers need to write HTML for the form, validate and properly sanitize enterd data on the server(and possibly also in the browser), repost the form with error messages to inform users of any invalid fields, handle the data when it has sucessfully been submitted, and finally respond to the user in some way to indicate success. Django Forms take a lot of the work out of all these steps, by providing a framework that lets you define forms and their fields programmatically, and then use these objects to both generate the form HTML code and handle much of the validation and user interaction.
+
+we're going o show you a few of the waysyou can create and work with forms, and in particular, how the generic edtiing views can signifcantly reduce the amount of wrok you need to do to create forms to manipulate your pmodels. along the way, we'll extend our locallibrary application by adding a form to allow librarians to renew library books, and we'll create pages to create, edit and delete books and authors (reproducing a basic version of the form shown above for editing books).
+
+1. HTML Forms
+First a brief overview of HTML Forms. Consider a simple HTML form, with a single text field for entering the name of some 'team', and its associated label:
+
+the form is defined in HTML as a collection of elements inside <form></form> tags, containing at least one input element of type='submit'
+
+While here we just have on text field for entering the team name, a form may have any number of other input elements and their associated labels. the field's type attribute defines what sort of widget will be displayed. the name and id of the field are used to identify the field in JS/CSS/HTML, while value defines the inital value for the field when it is frist displayed. the matching team label is specified using the label tag (see "enter name' above), with a field containing the id value of the associated input.
+
+action : the resource/url where data is to be sent for processing when the form is submitted. if this is not set (or set to an empty string), then the form will be submitted back to the current page URL.
+method : the HTTP method used to send the data: post or get.
+The POST method should always be used if the data is going to result in a change to the server's database because this can be made more resistant to cross-site forgery request attacks.
+The get method should only be used for forms that don't change user data (e.g, a search form). it is recommended for when you want to be able to bookmark or share the URL.
+The role of the server is first to render the inital form state - either containing blank fiels or pre-populated with inital values. After the user presses the submit button, the server will receive the form data with values from the web browser and must validate the information. If the form contains invalid data, the server should display the form again, this time with user-entered data in "valid" fiels and messages to describe the problem for the invalid fiels. Once the server gets a request with all valid form data, it can perform for the invalid fiels. Once the server gets a request with all valid form data, it can perform an appropriate action (e.g saving the data, returning the result of a search, uplodaing a fiel. ) and then notify the user.
+
+As you can imagine, creating the HTMl, validating the returned data, re-displaying the entered data with error reports if needed, and perfoming the desired operation on valid data can all take quite a lot of effort to 'get rigt'. Django makes this a lot easier, by taking away some of the heavy lifting and repetitive code!
+
+Django form handling process
+
+Django's form handling uses all of the same tech that we learned about in previous tutorials. the view gets a request, performs any actions required including reading data from the models., then generates and returns an HTMl page(from a template, into which we pass a context containing the data to be displayed).
+What makes things more complicated is that the server also needs to be able to process data provided by the user, and redisplay the page if there are any error.s
+
+A process flowchart of how Django handles form request is shown below, starting with a request for a page containing a form
+
+2. Renew-book form using a Form and function view
+
+2-1. Form
+The form class is the heart of Django's form handling system. it sepcifies the fields in the form, their layout, display widgets, labels, inital values, valid values, and (once validated) the error messages associated with invalid fiels. the class also provides methods for rendering itself in the templates using predefined formats or for getting the value of any element.
+
+Declaring a Form
+The declration  syntax for a Form is very similar to that for declaring a Model, and shares the same field types. this makes sene because in both cases we need to ensure that each field handles the right types of data, is constrained to valid data, and has a description for display/documentation.
+
+form fiels
+in this case, we have a singe datefield for entering the renewal date that will render in html with a blank value, the default label "renewal date:", and some helpful usage text: as none of the other optional arguments are specfied the field will accept dates using the input_formats:, and will be rendered using the default widget : DateInput.
+
+There are many other types of form fields, which you will largely recognise from their similarity to the equivalent model field classes: BooleanField, CharField, ChoiceField, ...
+
+The arguments that are common to most fileds are listed below.
+
+Validation
+Django provides numerous places where you can validate your data. The easiest way to validate a single field is to iverride the method clean_<fieldname>() for the field you want to check. 
+
+There are two important things to note. The first is that we get our data using self.cleaned_data['renewal_date'] and that we return this data whether or not we change it at the end of the function. this step gets us the data 'cleaned' and sanitized of potentially unsafe input using the default validators. and converted into the correct standaard type for the data.
+
+The second point is that if a value falls outside our  range we raise a validationerror, specifying the error text that we want to display in the form if an invalid value is entered. the ex above also wraps this text in one of django's translation functions ugettext_lazy(), which is good practice if you  wnat to translate your site later.
+
+There are numerous other methods and examples for validating forms in Form and field validation. ex) in cases where you have multiple fileds that depend on each other, you can override the Form.clean(). function and again raise a ValidationError.
+
+3. URL configuration
+The URL configuration wll redirect URLs with the format /catalog/book/<bookinstance_id>/renew/ to the function named renew_book_librarian() in views.py, and send the BookInstance id as the parameter named pk. The pattern only matches if pk is a correctly formatted uuid.
+
+we can name our captured URL data 'pk' anyting we like, because we have complete control over the view function (we're not using generic detail view class that expects parameters with a certain name). however, pk short for primary key, is reasonable convention to use!
+
+4. View
+As discussed in the Django form handling process above, the view has to render the default form when it is first called and then either re-render it with error messages if the data is invalid, or process the data and redirect to a new page if the data is valid. In order to perform these different actions, the view has to be able to know whether it is being called for the first time to render the default form, or a subsequent time to validate data.
+
+For forms that use a POST request to submit information to the server, the most common pattern is for the view to test against the POST request type (if request.method == 'POST':) to identify form validation requests and GET (using an else condition) to identify the inital form creation request. If you want to submit your data using a GET request, then a typical approcach for identifying whether this is the first or subsequent view invocation is to read the form data.
+
+The book renewal process will be writing to our database, so, by convention, we use the POST request approach, the code fragment below shows the pattern for this sort of function view.
+
+View 작성하기.
+
+Template 작성하기.
+필드가 하나만 있기 때문에 분명하지는 않지만 기본적으로 모든필드는 자체 테이블 행에 정의되어 있음. 템플릿 변수 {{form.as_table}}을 참조하면 동일한 렌더링이 제공됨.
+
+Form template variable을 사용하는 다른 방법
+또한 각 필드를 {{form.as_ul}}을 사용하여 목록항목으로 렌더링하거나 {{form.as_p}}를 사용하여 단락으로 렌더링 할 수도 있음.
+
+또한 dot notation을 사용하여 form 속성을 인덱싱하여 각 부분 렌더링으 ㄹ완벽하게 제어할 수도 있음.
+
+ModelForms
+Creating a Form class using the approach described above is very flexible, allowing you to create whatever sort of form page you like and associate it with any model or models.
+However if you just need a form to map the fields of a single model then your model will already define most of the information that you need in your form: fields, labels, help text, etc.
+Rather than recreating the model definitions in your form, it is easier to use the ModelForm helper class to create the form from your model. this modelform can then be used within your views in exactly the same way as an rodinary Form.
+
+A basic ModelForm containing the same field as our original RenewBookForm is shown below.
+All you need to do to create the form is add class Meta with the associated model(bookinstance) and a list of the model fields to include in the form (you can include all fields using fields = '__all__', or you cna use exclude (instead of fields) to specify the fields not to include from the model.)
+
+This might not look like all that much simpler than just using a form(and it isn't in this case, because we just have on field). however if you have a lot of fields, it can reduce the amount of code quite significantly!
+The rest of the information comes from the model field definitions(e.g. labels, widgets, help texet, error messages). if these aren't quite right, then we can override them in our class meta, specifying a dictionary containing the field to change and its new value. For ex, in this form we might want a label for our field of "renewal date" (rather than the defualt based on the field name: due date), and we also want our help text to be specific to this use case.
+The meta below shows you how to override these fields, and you can similary set widgets and error_messages if the defaults aren't sufficient.
+
+To add validation you can use the same approach as for a normal Form - you define a function named clean_field_name() and raise validationError exceptions for invalid values. the only difference with respect to our oiriginal form is that the model field is named due_back and not 'renewal_date'.
+
+Generic editing views
+The form handling algorithm we used in our function view example above represents an extremely common pattern in form editing views. Django abstracts much of this "boilerplate" for you, by creating generic editing views for creating, editing, and deleting views based on models. Not only do these handle the 'view' behaviour, but they automatically create the form class (a modelform) for oyu from model.
+
+As you can see, to create the views you need to derive from createview, updateview, and deleteview and then define the associated model.
+
+For the "create" and "update" cases you also need to specify the fields to display in the form (using in same syntax as for modelform). in this case we show both the syntax to display 'all' fields, and how you can list them individually. you can also specify initial values for each of the fields using a dictionary of field_name/value pairs (here we arbitrarily set the date of death for demonstration purposes - you might want to remove that!). By default these views will redirect on successs to a page displaying the newly created/edited model item, which in our case will be the author detail view we created in a previous tutorial. YOu can specify an alternative redirect location by explicitly declaring parameter sucess_url (as done for the AuthorDelete class).
+
+The authorDelete class doesn't need to display any of the fields, so theese don't need to be specified. YOu do however ened to specify the success_url, because there is no obvious defualt value for Django to use. In this case we use the reverse_lazy() function to redirect to our author list after an author has been deleted - reverse_lazy() is a lazily executed version of reverse(), used here because we're providing a URL to a class_based view attributes.
+
+5. Templates
+The "create' and 'update' views use the same template by defualt, which will be name d after your model : model_name_form.html(you can change the suffix to something other than _form using the tmeplate_name_suffix field in your view, e.g. template_name_suffix = '_other_suffix')
+Create the template file locallibrary/catalog/templates/catalog/author_form.html and copy in the text below.
+
+URL configurations
+there is nothing particulary new here! you can see that the views are classes, and must hence be called via .as_view(), and you should be able to recognise the URL patterns in each case. We must use pk as the name for our captured primary key value, as this is the parameter name expected by the view classes.
+
+The author create, update, and delate pages are now ready to test.
+
+'''
+새로운 페이지를 만들고, CRUD를 배울수있는 좋은시간이었다.. 아직 이걸 어떻게 사용하는지 감이안잡히지만, django가 아주 조금씩은 친해지고있다는것에 의의를 두고싶다.. 어렵당
+'''
