@@ -1,0 +1,90 @@
+Django! 2회차
+
+1. 가상환경 설치
+pip3 install virtualenv
+
+2. virtualenv [가상환경 이름]
+
+3. 가상환경이름\scripts\activate
+    ->활성화 (비활성화 deactivate)
+
+4. pip3 install django
+    ->django설치
+
+5. django-admin startproject [프로젝트명]
+
+6. django-admin startapp [앱명]
+
+7. templates 폴더 만들기(앱마다 templates관리)
+
+8. app을 프로젝트에 등록.(프로젝트의 settings.installed_apps에 추가)
+
+9. models.py 작성
+class ???(models.Model): (django에서 지원해주는 model)
+  models.charfield(max_length=X, verbose_name='')
+    max_length 는 field내의 최대길이, verbose_name은 admin계정에서 로그인했었을때 기본값이 username인데 사용자명으로 바꿔준것.
+ 
+ models.DateTimeField(auto_new_add, verbose_name)
+  auto_new_add = True Class가 저장되는 시점에 시간이 바로저장됨
+
+class안의 class meta를 통해서 django framework안에 custom할 수 있음(table명 지정 기타등등)
+
+db관리(10~11)
+10. python manage.py makemigrations 를 통해서 모델이 만들어짐(실제로 migration 폴더에 들어가면 모델이 만들어져있음)
+
+11. python manage.py migrate -> db생성(setting에 있는 것 포함) app세팅이 되어있지않다면, 오류가 남.
+
+11-1. db를 바꿨다면 항상 10-11을 해줘야함.
+
+12. python manage.py runserver를 통해서 실행 할 수있음.
+
+admin 관련
+1. python manage.py createsuperuser 를 통해서 admin계정을 만들 수 있음.
+
+
+2. admin을 작성하면 custom할수있음.
+
+3. admin에서 user정보를 볼수있는데, object라고 써있다. 그것은
+class를 문자열로 변환한 값. -> __str__을 쓴다면, 문자열을 반환할때 username을 반환할 수 있게됨.
+
+4. admin의 user정보에 대한 tuple을 보고싶다면, admin 클래스에서 list_display=('튜플명')설정
+
+5. meta에서 verbose_name을 통해서 admin에서 한글로 변환가능
+
+urls 관련
+
+1.  처음 project에 있는 urls.py에서 각 app별로 url을 나눠준다.
+include()를 통해서 해준다.
+ex) path('fcuser/',include('fcuser.urls'))
+include는 fcuser라는 폴더에 urls.py로 가겠다는 path정보를 담고있다. fcuser/라는 url이 입력되면 include함수가 실행되게된다.
+
+2. 앱의 urls.py에서는 해당되는 매칭을 해준다.
+views.py에 있는 class를 불러오게되며, 해당클래스는 render를 하거나 다른 방법으로 html를 맵핑시킬 수 있다.
+ex) path('fcuser/',views.class이름)
+
+templates 관련
+
+form에서 데이터를 전달하고자 할때, {% csrf_token%}을 반드시넣어줘야한다. 이유는 cross-domain을 막기위해서. 암호화된 키를 숨켜놓는데, 만약 키가 없으면 서버에서 거절을하게된다.(안써주면 에러)
+
+views에서 render로 넘겨받았을때, 바로 접근하면된다.
+hello_world['error']="something wrong!"
+ex) views.py에서 render(request, html명, hello_world)라고 받았을때, templates 에서는 {{error}} 요로케 받아준다.
+
+views 관련
+1. request를 홈페이지에서 접근한 것과, templates에서 POST로 접근했을때를 나누어 주어야한다.
+request.method=='GET', request.method=='POST'
+
+2. 동적으로 모델을 만들고 싶을때, models의 class를 import하고 request.POST['key']로 받은 값들을
+fcuser=Fcuser(username=~~~)해서 생성해준다. (객체)
+그리고나서 fcuser.save()해준다.
+
+3. templates로 값을 넘기고싶을때 render(request, html명, 리스트ordict명)을 써줘서 넘겨준다.
+
+4. 비밀번호를 암호화해서 저장해야만한다.
+from from django.contrib.auth.hashers import make_password
+을 해주고 password를 make_password의 매개변수로 넣어준다
+
+5. POST는 dict이다.
+
+6. POST.get('username', None )을 해서 초기값을 구분해준다.
+    username이 받는값, 없다면 None.
