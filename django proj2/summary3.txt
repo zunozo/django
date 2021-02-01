@@ -1,0 +1,25 @@
+Cookie
+session이 동작하려면 세션의 정보가 들어가 있는곳.
+
+logout구현.
+if request.session.get('user') : #있는지 없는지 확인
+있으면 del(request.session['user'])
+
+redirect를 통해서 홈으로.
+
+상속의 필요성
+공통된 부분을 바꾸고자할때,편의성을 위해.(코드도 보기쉬워진다.)
+base.html
+{% block 이름 %}
+{% endblock%}
+
+어딘가.html
+{% extends "base.html"%}
+{% block 이름 %}
+{% endblock%}
+
+그리고 block 뒤에 무언가를 쓸때, 꼭 변수명이 다르지 않아도됨, 왜냐하면, url에서 view로 연결해주고 view에 있는 함수가, templates를 불러올때 특정한 경로가 지정될텐데, templates마다 다르므로, 공통된 변수로 작성해줘도 무방하다.
+
+forms.py는 app폴더에 생성하고, 내가원하는 폼을 만들어준다.
+만들때 label을 정하게되면, templates에서 field.label을 쓸때, 내 라벨로 저장한 값을 끌어다 쓸 수 있다.
+widget=forms.PasswordInput 을 사용하면 내가 원하는 위젯으로 동작되게 할 수 있다.
