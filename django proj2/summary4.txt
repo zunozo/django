@@ -1,0 +1,35 @@
+template
+form을 사용하고나서, form에대한 반복문을 돌릴때, 각각의 field에는 field.errors가 존재하게된다. 만약 없다면, None 아무것도 업겠고, error가 있다면, 나타나게 True가 되겠다.
+
+forms
+form안에 add_error라는 함수가 있는데, 특정필드안에 에러를 넣는 함수가되겠다.
+
+form.CharField(error_messages={'required':'~~~'})
+를 통해서 내가 필요한 message를 에러로 보낼 수 있다.
+
+form에서 def clean(self)라는 함수를 class안에 선언함으로써, cleaned_data 받아서 처리한다.
+cleaned_data는 is_valid를 함으로써, 생기게된다.
+cleaned_data는 dict형채로서, get을이용해서 접근한다.
+from django.contrib.auth.hashers import check_password를 함으로써, password확인을 직접하지 않아도된다.
+ex) if not check_password(password, fcuser.password):
+self.add_error('password', '비밀번호를 틀렸습니다.')
+그리고 view에서 id가 필요할 때가 있는데, form에서 id를 clean에서, 만약 비밀번호가 일치하다면, 내 객체의 id를 self.user_id로 넣어준다. 그럼 view에서 이정보를 불러와 request.session['user']에 넣어준다.
+음 다시말해서, 내가지금 불러온 페이지의 정보들이 유효하다면(is_valid 통과), request의 session['user']필드를 = form.user_id(요건 form에서 왔음)로 채워준다.
+
+
+model
+model의 db에서 모델들을 연결할 수 있게되는데, foreginkey를 이용해서 연결할 수 있다.
+ex) models.ForeignKey('fucser.Fcuser',on_delete=models.CASCADE)
+
+
+
+views
+model.objects.all().order_by('-by')
+모델에서 모든객체를 가져와 정렬한다()의 기준으로
+-를 붙이게되면, 역순이므로 최신글부터 가져옴
+
+
+
+'''
+ps.. 하루동안 왜 is_valid함수가 안되는지 궁금해서 막 찾으러 다녔는데, 어디서 잘못됬는지 모르겠지만 setting도 다시 처음으로 바꾸고 오타도 다시확인하고나니 하루만에 복구하였다.. ==
+'''
