@@ -1,0 +1,13 @@
+폴더 git하는법
+1. 내가 올리고자하는 폴더의 상위폴더에간다.
+2. git bash를 열어준다.
+3. git init
+4. git status
+5. git add 원하는파일/원하는이름( 폴더자체를 올리고 싶다면, 원하는폴더/ 여기까지만 입력해준다.)
+6. git commit -m "원하는 내용"(원하는내용에는 프로젝트 옆에 설명란에 뜨게된다.)정확히 뭔지모르겠음.. 링크도되는뎅
+7. git remote add origin "자신의 레포지토리 주소"
+8. git remote -v
+9. git push origin master
+이때 add origin 주소에 이미 git을 연동한 적이 있다면 오류가 날 것이다. 그래서 , 다음을 통해서 강제 push가 가능할 것이다.
+git push origin +master
+이 때, 주의할 점은 강제 push를 할 경우 기존에 존재하는 내용이 삭제 되니 조심할 것.
