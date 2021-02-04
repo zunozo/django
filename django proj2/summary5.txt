@@ -1,0 +1,67 @@
+속보.. 소스코드  visual code에서 git하는 거 따라해보다가 source control이 2K이길래 비워줬는데, 다날아감........
+그래서, 이제 fc_community를 만드는 나머지작업은 강의만들으며, proj은 올리지않을예정.(나중에 소스코드가 없으니 이걸보고도 참고할 수 있도록 작성해야함.)
+
+templates
+ifeqaul ex) {% ifequal field.name 'contents' %}
+
+
+view
+글쓰기의 경우, 내가 누군지 말을안해줘도, id가 내재적으로 저장이 되어야하기 때문에, view에서 그러한 연산을 해줘야한다.
+id는 session에 담겨있게되고, 그것을 get을 통해서 가져온다.
+ex) user_id = request.session.get('user')
+
+내가 원하는 정보를 모델 객체에 넣은후에, save를 해주면 저장되게 된다.(save안해주면 의미x)
+
+ex) 어떤 책에대한 상세정보를 만들고자할때 URL이 books_list/1/ 이런식으로 되어야한다면
+1,2,3,4가 pk가 된다.
+URL에서 path('detail/<int:pk>/'), board_detail), 라고 한다면 pk라는 변수에 int형을 저장하겠다. 라고 인식하게된다.
+그럼 view에서 def board_detail(request, pk): 을 통해서  pk라는 변수를 받아올 수 있다.
+그럼 요론식으로 하면된다.
+board = Board.objects.get(pk=pk)
+
+return render(request, 'html', {})를 해줄때, 내가 {}에 {'board': board}를 보냇다면
+templates에서 board로 접근할 수 있다. 
+
+**예외처리** 매우중요함!
+try: some
+except ~~: something 을 이용해서 해준다.
+ex)
+try:
+    fcuser = Fcuser.objects.get(username=username)
+except Fcuser.DoesNotExist:    << DoesNotExist는 에러가 날때, django 페이지에 어떠한 에러라고 나오게된다.
+처리는 self.add_error('username', '아이디가 없습니다.')
+         return
+
+그리고 페이지가 없을때, http404를 django에서 지원해주는데,
+from django.http import Http404를 통해서
+raise Http404('게시글을 찾을 수 없습니다') 요로케 한다.
+
+Paging 기법
+Django에서 지원해주는 paginator가 있다.
+ex) from djang.core.paginator import Paginator 
+page = int(request.GET.get('p',1))
+paginator = Paginator(all_boards, 한페이지에 넣고싶은 페이지개수)
+boards = paginator.get_page(page)
+
+templates 에도 request에 대한 세션의 검증을 해줄수있다.
+ex)
+{% if request.session.user %}
+
+버튼 예제
+<button class="btn btn-primary btn-blcok" onclick='location.href='/fcuser/logout/'">로그아웃</button>
+
+1:N -> ForeignKey  M:N ->  ManyToManyField
+ex)
+models.ManytoManyField('tag.Tag', verbose_name='태그')
+models.ForeignKey('fcuser.Fcuser', on_delete=models.CASCADE, verbose_name)
+
+forms
+required가 False이면, 그 필드가 없어도 에러가 나지않는다.
+
+get_or_create
+ex)
+Tag.objects.get_or_create(name=tag)
+get_or_create 는 있으면 가져오고, 없으면 name=tag로 해서 만든다.
+그리고 board가 생성이되어서 저장이되면, 내부적으로 id가 생성이된다. 그리고 그 객체에 무언가를 추가하고싶다면 save하고 난 다음에 추가가 가능하다.(id가 생성된 후 에 가능하다는 말)
+# 원래는 for문을 거치면서, 만약에 있는값이면 생성하지않고, 가져오고, 없으면 가져오는방식을 택하는데 Django가 지원해주니 편리한 것 같다.
+
