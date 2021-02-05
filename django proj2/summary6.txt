@@ -1,0 +1,16 @@
+models
+models.ForeignKey()를할때,
+models.ForeignKey('app.class',)를 써주면된다
+ex) models.ForeignKey('fcuser.Fcuser', on_delete = models. CASCADE, verbose_name='사용자')
+
+admin에서 쓰기편하려고, Metaclass를 만들어준당.
+
+admin에서 모델을 문자열로 변환했을때의 함수!
+def __str__(self):
+ 
+class 기반의 generic view
+
+view에서 미리 만들어진 form을 이용해서 view를 선언하고, form_class = registerForm이런식으로 해줘서, 사실상 view에는 코드를 입력하지 않아도 될정도로 깔끔해진다.(대신 form이 더러워지긴 하지만, 공통된 부분이니깐.)
+
+그리고 이런식으로 generic을 이용해서 view를 만들게되면, URL에서는 render(request, registerview)로만 볼수있는것이 아니라,
+render(request, registerview.as_view())로 볼수 있게 된다.
