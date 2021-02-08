@@ -1,0 +1,13 @@
+Form중에 List를 보여주는 ListView도 있는데, 
+form django.views.generic import Listview를 하고,
+class ProductList(ListView):를 통해서 선언해주고,
+model 과 template_name을 써준다.
+그럼 일단 연결은 된다.
+그리고 templates에서 내가 보내준 form에 object의 list가 자동으로 object_list에 담기게 된다.
+출력은 for문을 통해서 하면되고, 만약 object_list를 다른 변수로 바꾸고 싶다면, view에서 context_object_name = '바꾸고싶은 단어'로 바꿔준다.
+
+templates에서 {% load humanize %}를 통해서 여러 편리한 기능을 이용할 수 있다. googling
+만약 쓰려면 settings.py에 app 등록 해줘야함
+
+views
+Formview에서 success_url을 통해 success되었을때, 이동할 url을 지정해줄 수 있다.
