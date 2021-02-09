@@ -1,0 +1,9 @@
+settings.py에
+Templates에서
+ADD_DIRS = True가 의미하는것이
+모든 templates를 찾는것을 의미. 따라서 base가 각각마다 존재할 이유가없음.
+
+templates
+base에 block header을 만들어놓고, header가 필요할때, 상속받은 곳에서 그때그때 추가할 수 있게 만듬.
+template에서는
+{%block header%}~{%endblock%}을 통해서 해준다.
