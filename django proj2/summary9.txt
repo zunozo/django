@@ -1,0 +1,25 @@
+나의 form에
+def __init__(self,request, *args, **kwargs):
+super().__init__(*args,**kwargs)
+self.request = request
+를 통해서 원래의 init를 상속받아 생성.
+그리고 view에서 form을 전달할때 request까지 전달할 수 있도록, 바꿔준다.
+
+이 request를 하는 이유는 음, 예를들어 페이지에서 무언가를 주문하고나서 그 페이지를 다시 보여줄때, 이번엔 POST형태로 올테니깐, GET형태로 왔었을때는, request를 알 수 있었지만, POST형태일때는 모르는 그런 현상이 있을 수 있다. 그래서 이런것을 방지하고자 해결하고자 이렇게 바꿔준다.
+
+def get_form_kwargs(self, **kwargs):폼을생성할때 어떤 인자값을 결정하는 함수.
+
+form_invalid()함수를 이용해서 form이 실패했을 경우의 url을 재지정해줄수 있다.
+
+트랜젝션으로 만들겠다.
+일련의 여러 동작을 하나의 동작으로 만들겠다.
+Atomic.  -> 하는방법
+django.db에서 transaction을 import하고.
+with transaction.atomic():으로 감싸주면 된다.
+
+orderlist를 보여줄때, model을 상속받아서 한다면 다른사람의 것 까지 조회되므로, queryset을 통해서 하는데, 함수를 제공해준다.
+get_queryset()으로 불러와서
+queryset = Order.objects.filter(조건)을 통해서 자신의 조건에맞는 것들만 보여줄 수 있도록 지정해줄 수 있다.(정보보호)
+ex)
+def get_queryset(self, **kwargs):
+queryset = Order.objects.filter(fcuser__email=self.request.session.get('user')) return queryset
